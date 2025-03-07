@@ -1,5 +1,3 @@
-const API_URL = "http://xx.xx.xx.xx:5000/process_text";
-
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "openPopup") {
     const selectedText = request.selectedText;
@@ -7,17 +5,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const y = request.y;
     const screenWidth = request.screenWidth;
     const screenHeight = request.screenHeight;
-    const language = detectLanguage(selectedText);
+    // const language = detectLanguage(selectedText);
 
     const requestOptions = {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "authorization": "Bearer xxxx",
       },
-      body: JSON.stringify({
-        text: selectedText,
-        language: language,
-      }),
+      body: JSON.stringify([{
+        Text: selectedText
+      }]),
     };
 
     const popupWidth = 400;
@@ -41,10 +39,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const popupWindowId = window.id;
         const popupTabId = window.tabs[0].id;
 
-        fetch(API_URL, requestOptions)
+        fetch("https://api-edge.cognitive.microsofttranslator.com/translate?from=&to=zh-Hans&api-version=3.0&includeSentenceLength=true", requestOptions)
           .then((response) => response.json())
           .then((data) => {
-            const result = data.choices[0].message.content;
+            const result = data[0].translations[0].text;
 
             chrome.runtime.sendMessage({
               action: "showTranslation",
@@ -60,5 +58,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 function detectLanguage(text) {
   const regex = /[\u4e00-\u9fa5]/;
-  return regex.test(text) ? "zh" : "other";
+  return regex.test(text) ? "zh-Hans" : "other";
 }
